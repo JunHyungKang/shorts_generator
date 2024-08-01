@@ -1,5 +1,6 @@
 import gradio as gr
-
+import os
+os.environ["TORCH_CUDNN_SDPA_ENABLED"] = "1"
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
