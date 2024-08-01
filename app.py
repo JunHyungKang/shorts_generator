@@ -160,15 +160,14 @@ with gr.Blocks() as demo:
         gr.Markdown("# SAM2 Image Predictor")
         with gr.Row():
             with gr.Column():
-                input_image = gr.Image(label="input image", interactive=True, type="filepath")
+                input_image = gr.Image(label="input image", interactive=False, type="filepath", visible=False)
                 with gr.Row():
                     point_type = gr.Radio(label="point type", choices=["include", "exclude"], value="include")
                     clear_points_btn = gr.Button("Clear Points")
                 with gr.Column():
                     points_map = gr.Image(
                         label="points map", 
-                        interactive=False,
-                        height=400
+                        interactive=True
                     )
                     submit_btn = gr.Button("Submit")
             with gr.Column():
@@ -182,10 +181,10 @@ with gr.Blocks() as demo:
         queue=False
     )
     
-    input_image.upload(
+    points_map.upload(
         preprocess_image, 
-        input_image, 
-        [first_frame_path, tracking_points, trackings_input_label, points_map],
+        points_map, 
+        [first_frame_path, tracking_points, trackings_input_label, input_image],
         queue=False
     )
 
