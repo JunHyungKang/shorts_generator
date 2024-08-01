@@ -3,7 +3,6 @@ import gradio as gr
 import os
 os.environ["TORCH_CUDNN_SDPA_ENABLED"] = "1"
 import torch
-import spaces
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
@@ -130,7 +129,7 @@ def show_masks(image, masks, scores, point_coords=None, box_coords=None, input_l
 
     return combined_images, mask_images
 
-@spaces.GPU()
+
 def sam_process(input_image, checkpoint, tracking_points, trackings_input_label):
     image = Image.open(input_image)
     image = np.array(image.convert("RGB"))
