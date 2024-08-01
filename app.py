@@ -113,7 +113,7 @@ def sam_process(input_image, tracking_points, trackings_input_label):
     predictor.set_image(image)
 
     input_point = np.array(tracking_points.value)
-    input_label = np.array([1])
+    input_label = np.array(trackings_input_label.value)
 
     print(predictor._features["image_embed"].shape, predictor._features["image_embed"][-1].shape)
 
