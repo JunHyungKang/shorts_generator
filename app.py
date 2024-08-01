@@ -66,8 +66,8 @@ def sam_process(input_image):
     image = Image.open(input_image)
     image = np.array(image.convert("RGB"))
 
-    sam2_checkpoint = "./checkpoints/sam2_hiera_large.pt"
-    model_cfg = "sam2_hiera_l.yaml"
+    sam2_checkpoint = "./checkpoints/sam2_hiera_tiny.pt"
+    model_cfg = "./sam2_configs/sam2_hiera_t.yaml"
 
     sam2_model = build_sam2(model_cfg, sam2_checkpoint, device="cuda")
     
