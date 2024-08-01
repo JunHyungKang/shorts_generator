@@ -1,4 +1,5 @@
 import gradio as gr
+import spaces
 import os
 os.environ["TORCH_CUDNN_SDPA_ENABLED"] = "1"
 import torch
