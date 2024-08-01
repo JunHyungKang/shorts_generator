@@ -92,9 +92,11 @@ def show_masks(image, masks, scores, point_coords=None, box_coords=None, input_l
         plt.figure(figsize=(10, 10))
         plt.imshow(image)
         show_mask(mask, plt.gca(), borders=borders)  # Draw the mask with borders
+        """
         if point_coords is not None:
             assert input_labels is not None
             show_points(point_coords, input_labels, plt.gca())
+        """
         if box_coords is not None:
             show_box(box_coords, plt.gca())
         if len(scores) > 1:
@@ -127,6 +129,7 @@ def show_masks(image, masks, scores, point_coords=None, box_coords=None, input_l
 
     return combined_images, mask_images
 
+@spaces.GPU()
 def sam_process(input_image, checkpoint, tracking_points, trackings_input_label):
     image = Image.open(input_image)
     image = np.array(image.convert("RGB"))
@@ -167,7 +170,7 @@ def sam_process(input_image, checkpoint, tracking_points, trackings_input_label)
 
     print(masks.shape)
 
-    results, mask_results = show_masks(image, masks, scores, point_coords=input_point, input_labels=input_label, borders=False)
+    results, mask_results = show_masks(image, masks, scores, point_coords=input_point, input_labels=input_label, borders=True)
     print(results)
 
     return results[0], mask_results[0]
@@ -211,23 +214,23 @@ with gr.Blocks() as demo:
     )
     
     points_map.upload(
-        preprocess_image, 
-        points_map, 
-        [first_frame_path, tracking_points, trackings_input_label, input_image],
-        queue=False
+        fn = preprocess_image, 
+        inputs = [points_map], 
+        outputs = [first_frame_path, tracking_points, trackings_input_label, input_image],
+        queue = False
     )
 
     points_map.select(
-        get_point, 
-        [point_type, tracking_points, trackings_input_label, first_frame_path], 
-        [tracking_points, trackings_input_label, points_map], 
-        queue=False
+        fn = get_point, 
+        inputs = [point_type, tracking_points, trackings_input_label, first_frame_path], 
+        outputs = [tracking_points, trackings_input_label, points_map], 
+        queue = False
     )
-
 
     submit_btn.click(
         fn = sam_process,
         inputs = [input_image, checkpoint, tracking_points, trackings_input_label],
         outputs = [output_result, output_result_mask]
     )
-demo.launch()
+
+demo.launch(show_api=False, show_error=True)
