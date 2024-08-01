@@ -12,24 +12,26 @@ from sam2.sam2_image_predictor import SAM2ImagePredictor
 def preprocess_image(image):
     return image, gr.State([]), gr.State([]), image
 
-def get_point(tracking_points, trackings_input_label, first_frame_path, evt: gr.SelectData):
+def get_point(point_type, tracking_points, trackings_input_label, first_frame_path, evt: gr.SelectData):
     print(f"You selected {evt.value} at {evt.index} from {evt.target}")
 
     tracking_points.value.append(evt.index)
     print(f"TRACKING POINT: {tracking_points.value}")
 
-    trackings_input_label.value.append(1)
+    if point_type == "include":
+        trackings_input_label.value.append(1)
+    elif point_type == "exclude":
+        trackings_input_label.value.append(0)
     print(f"TRACKING INPUT LABEL: {trackings_input_label.value}")
-    # for SAM2
-    # input_point = np.array(tracking_points.value)
-    # print(f"SAM2 INPUT POINT: {input_point}")
-    # input_label = np.array([1])
-
+    
     transparent_background = Image.open(first_frame_path).convert('RGBA')
     w, h = transparent_background.size
     transparent_layer = np.zeros((h, w, 4))
-    for track in tracking_points.value:
-        cv2.circle(transparent_layer, track, 5, (255, 0, 0, 255), -1)
+    for index, track in enumerate(tracking_points.value):
+        if trackings_input_label.value[index] == 1:
+            cv2.circle(transparent_layer, track, 5, (0, 0, 255, 255), -1)
+        else:
+            cv2.circle(transparent_layer, track, 5, (255, 0, 0, 255), -1)
 
     transparent_layer = Image.fromarray(transparent_layer.astype(np.uint8))
     selected_point_map = Image.alpha_composite(transparent_background, transparent_layer)
@@ -143,13 +145,14 @@ with gr.Blocks() as demo:
         with gr.Row():
             input_image = gr.Image(label="input image", interactive=True, type="filepath")
             with gr.Column():
+                point_type = gr.Radio(label="point type", choices=["include", "exclude"] value="include")
                 points_map = gr.Image(label="points map", interactive=False)
                 submit_btn = gr.Button("Submit")
-            output_result = gr.Gallery()
+            output_result = gr.Image()
     
     input_image.upload(preprocess_image, input_image, [first_frame_path, tracking_points, trackings_input_label, points_map])
 
-    points_map.select(get_point, [tracking_points, trackings_input_label, first_frame_path], [tracking_points, trackings_input_label, points_map])
+    points_map.select(get_point, [point_type, tracking_points, trackings_input_label, first_frame_path], [tracking_points, trackings_input_label, points_map])
 
 
     submit_btn.click(
