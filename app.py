@@ -120,7 +120,7 @@ def sam_process(input_image, tracking_points, trackings_input_label):
     masks, scores, logits = predictor.predict(
         point_coords=input_point,
         point_labels=input_label,
-        multimask_output=True,
+        multimask_output=False,
     )
     sorted_ind = np.argsort(scores)[::-1]
     masks = masks[sorted_ind]
@@ -149,7 +149,7 @@ with gr.Blocks() as demo:
     
     input_image.upload(preprocess_image, input_image, [first_frame_path, tracking_points, trackings_input_label])
 
-    input_image.select(get_point, [tracking_points, trackings_input_label, first_frame_path], [tracking_points, trackings_input_label, points_map])
+    points_map.select(get_point, [tracking_points, trackings_input_label, first_frame_path], [tracking_points, trackings_input_label, points_map])
 
 
     submit_btn.click(
