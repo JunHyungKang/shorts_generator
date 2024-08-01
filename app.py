@@ -29,9 +29,9 @@ def get_point(point_type, tracking_points, trackings_input_label, first_frame_pa
     transparent_layer = np.zeros((h, w, 4))
     for index, track in enumerate(tracking_points.value):
         if trackings_input_label.value[index] == 1:
-            cv2.circle(transparent_layer, track, 5, (0, 0, 255, 255), -1)
+            cv2.circle(transparent_layer, track, 20, (0, 0, 255, 255), -1)
         else:
-            cv2.circle(transparent_layer, track, 5, (255, 0, 0, 255), -1)
+            cv2.circle(transparent_layer, track, 20, (255, 0, 0, 255), -1)
 
     transparent_layer = Image.fromarray(transparent_layer.astype(np.uint8))
     selected_point_map = Image.alpha_composite(transparent_background, transparent_layer)
@@ -73,37 +73,53 @@ def show_box(box, ax):
     w, h = box[2] - box[0], box[3] - box[1]
     ax.add_patch(plt.Rectangle((x0, y0), w, h, edgecolor='green', facecolor=(0, 0, 0, 0), lw=2))    
 
-def show_masks(image, masks, scores, point_coords=None, box_coords=None, input_labels=None, borders=False):
-    masks_store = []
+def show_masks(image, masks, scores, point_coords=None, box_coords=None, input_labels=None, borders=True):
+    combined_images = []  # List to store filenames of images with masks overlaid
+    mask_images = []      # List to store filenames of separate mask images
+
     for i, (mask, score) in enumerate(zip(masks, scores)):
+        # ---- Original Image with Mask Overlaid ----
         plt.figure(figsize=(10, 10))
         plt.imshow(image)
-        show_mask(mask, plt.gca(), borders=borders)
-
-        """
+        show_mask(mask, plt.gca(), borders=borders)  # Draw the mask with borders
         if point_coords is not None:
             assert input_labels is not None
             show_points(point_coords, input_labels, plt.gca())
-        """
-        
         if box_coords is not None:
-            # boxes
             show_box(box_coords, plt.gca())
         if len(scores) > 1:
             plt.title(f"Mask {i+1}, Score: {score:.3f}", fontsize=18)
         plt.axis('off')
-        # plt.show()
 
         # Save the figure as a JPG file
-        filename = f"masked_image_{i+1}.jpg"
-        plt.savefig(filename, format='jpg', bbox_inches='tight')
+        combined_filename = f"combined_image_{i+1}.jpg"
+        plt.savefig(combined_filename, format='jpg', bbox_inches='tight')
+        combined_images.append(combined_filename)
 
-        masks_store.append(filename)
-        
-        # Close the figure to free up memory
-        plt.close()
+        plt.close()  # Close the figure to free up memory
 
-        return masks_store
+        # ---- Separate Mask Image ----
+        plt.figure(figsize=(10, 10))
+        mask_image = np.zeros_like(image, dtype=np.uint8)  # Initialize a blank image
+        show_mask(mask, plt.gca(), borders=False)  # Draw the mask without borders
+
+        plt.axis('off')
+        plt.tight_layout()
+        plt.gca().set_axis_off()
+        plt.subplots_adjust(top=1, bottom=0, right=1, left=0,
+                            hspace=0, wspace=0)
+        plt.margins(0, 0)
+        plt.gca().xaxis.set_major_locator(plt.NullLocator())
+        plt.gca().yaxis.set_major_locator(plt.NullLocator())
+
+        # Save mask image
+        mask_filename = f"mask_image_{i+1}.png"
+        plt.savefig(mask_filename, format='png', bbox_inches='tight', pad_inches=0)
+        mask_images.append(mask_filename)
+
+        plt.close()  # Close the figure to free up memory
+
+    return combined_images, mask_images
 
 def sam_process(input_image, tracking_points, trackings_input_label):
     image = Image.open(input_image)
@@ -135,10 +151,10 @@ def sam_process(input_image, tracking_points, trackings_input_label):
 
     print(masks.shape)
 
-    results = show_masks(image, masks, scores, point_coords=input_point, input_labels=input_label, borders=True)
+    results, mask_results = show_masks(image, masks, scores, point_coords=input_point, input_labels=input_label, borders=False)
     print(results)
 
-    return results[0]
+    return results[0], mask_results[0]
 
 with gr.Blocks() as demo:
     first_frame_path = gr.State()
@@ -155,20 +171,33 @@ with gr.Blocks() as demo:
                 points_map = gr.Image(label="points map", interactive=False)
                 submit_btn = gr.Button("Submit")
             output_result = gr.Image()
+            output_result_mask = gr.Image()
     
     clear_points_btn.click(
         fn = preprocess_image,
         inputs = input_image, 
-        outputs = [first_frame_path, tracking_points, trackings_input_label, points_map]
+        outputs = [first_frame_path, tracking_points, trackings_input_label, points_map],
+        queue=False
     )
-    input_image.upload(preprocess_image, input_image, [first_frame_path, tracking_points, trackings_input_label, points_map])
+    
+    input_image.upload(
+        preprocess_image, 
+        input_image, 
+        [first_frame_path, tracking_points, trackings_input_label, points_map],
+        queue=False
+    )
 
-    points_map.select(get_point, [point_type, tracking_points, trackings_input_label, first_frame_path], [tracking_points, trackings_input_label, points_map])
+    points_map.select(
+        get_point, 
+        [point_type, tracking_points, trackings_input_label, first_frame_path], 
+        [tracking_points, trackings_input_label, points_map], 
+        queue=False
+    )
 
 
     submit_btn.click(
         fn = sam_process,
         inputs = [input_image, tracking_points, trackings_input_label],
-        outputs = [output_result]
+        outputs = [output_result, output_result_mask]
     )
 demo.launch()
