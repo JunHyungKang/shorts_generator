@@ -29,7 +29,7 @@ def get_point(point_type, tracking_points, trackings_input_label, first_frame_pa
     transparent_layer = np.zeros((h, w, 4))
     for index, track in enumerate(tracking_points.value):
         if trackings_input_label.value[index] == 1:
-            cv2.circle(transparent_layer, track, 20, (0, 0, 255, 255), -1)
+            cv2.circle(transparent_layer, track, 20, (0, 255, 0, 255), -1)
         else:
             cv2.circle(transparent_layer, track, 20, (255, 0, 0, 255), -1)
 
@@ -98,23 +98,19 @@ def show_masks(image, masks, scores, point_coords=None, box_coords=None, input_l
 
         plt.close()  # Close the figure to free up memory
 
-        # ---- Separate Mask Image ----
-        plt.figure(figsize=(10, 10))
-        mask_image = np.zeros_like(image, dtype=np.uint8)  # Initialize a blank image
-        show_mask(mask, plt.gca(), borders=False)  # Draw the mask without borders
+        # ---- Separate Mask Image (White Mask on Black Background) ----
+        # Create a black image
+        mask_image = np.zeros_like(image, dtype=np.uint8)
+        
+        # The mask is a binary array where the masked area is 1, else 0.
+        # Convert the mask to a white color in the mask_image
+        mask_layer = (mask > 0).astype(np.uint8) * 255
+        for c in range(3):  # Assuming RGB, repeat mask for all channels
+            mask_image[:, :, c] = mask_layer
 
-        plt.axis('off')
-        plt.tight_layout()
-        plt.gca().set_axis_off()
-        plt.subplots_adjust(top=1, bottom=0, right=1, left=0,
-                            hspace=0, wspace=0)
-        plt.margins(0, 0)
-        plt.gca().xaxis.set_major_locator(plt.NullLocator())
-        plt.gca().yaxis.set_major_locator(plt.NullLocator())
-
-        # Save mask image
+        # Save the mask image
         mask_filename = f"mask_image_{i+1}.png"
-        plt.savefig(mask_filename, format='png', bbox_inches='tight', pad_inches=0)
+        Image.fromarray(mask_image).save(mask_filename)
         mask_images.append(mask_filename)
 
         plt.close()  # Close the figure to free up memory
