@@ -145,7 +145,7 @@ with gr.Blocks() as demo:
         with gr.Row():
             input_image = gr.Image(label="input image", interactive=True, type="filepath")
             with gr.Column():
-                point_type = gr.Radio(label="point type", choices=["include", "exclude"] value="include")
+                point_type = gr.Radio(label="point type", choices=["include", "exclude"], value="include")
                 points_map = gr.Image(label="points map", interactive=False)
                 submit_btn = gr.Button("Submit")
             output_result = gr.Image()
