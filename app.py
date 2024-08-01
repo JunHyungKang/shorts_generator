@@ -12,7 +12,7 @@ from sam2.sam2_image_predictor import SAM2ImagePredictor
 def preprocess_image(image):
     return image, gr.State([]), gr.State([]), image
 
-def get_point(point_type, tracking_points, trackings_input_label, first_frame_path, evt: gr.SelectData):
+def get_point(point_type, tracking_points, trackings_input_label, first_frame_path, evt):
     print(f"You selected {evt.value} at {evt.index} from {evt.target}")
 
     tracking_points.value.append(evt.index)
@@ -24,16 +24,25 @@ def get_point(point_type, tracking_points, trackings_input_label, first_frame_pa
         trackings_input_label.value.append(0)
     print(f"TRACKING INPUT LABEL: {trackings_input_label.value}")
     
+    # Open the image and get its dimensions
     transparent_background = Image.open(first_frame_path).convert('RGBA')
     w, h = transparent_background.size
-    transparent_layer = np.zeros((h, w, 4))
+    
+    # Define the circle radius as a fraction of the smaller dimension
+    fraction = 0.02  # You can adjust this value as needed
+    radius = int(fraction * min(w, h))
+    
+    # Create a transparent layer to draw on
+    transparent_layer = np.zeros((h, w, 4), dtype=np.uint8)
+    
     for index, track in enumerate(tracking_points.value):
         if trackings_input_label.value[index] == 1:
-            cv2.circle(transparent_layer, track, 20, (0, 255, 0, 255), -1)
+            cv2.circle(transparent_layer, track, radius, (0, 255, 0, 255), -1)
         else:
-            cv2.circle(transparent_layer, track, 20, (255, 0, 0, 255), -1)
+            cv2.circle(transparent_layer, track, radius, (255, 0, 0, 255), -1)
 
-    transparent_layer = Image.fromarray(transparent_layer.astype(np.uint8))
+    # Convert the transparent layer back to an image
+    transparent_layer = Image.fromarray(transparent_layer, 'RGBA')
     selected_point_map = Image.alpha_composite(transparent_background, transparent_layer)
     
     return tracking_points, trackings_input_label, selected_point_map
@@ -170,19 +179,17 @@ with gr.Blocks() as demo:
         gr.Markdown("# SAM2 Image Predictor")
         with gr.Row():
             with gr.Column():
-                input_image = gr.Image(label="input image", interactive=False, type="filepath", visible=False)
+                input_image = gr.Image(label="input image", interactive=False, type="filepath", visible=False)                 
+                points_map = gr.Image(
+                    label="points map", 
+                    type="filepath",
+                    interactive=True
+                )
                 with gr.Row():
                     point_type = gr.Radio(label="point type", choices=["include", "exclude"], value="include")
                     clear_points_btn = gr.Button("Clear Points")
-                
-                with gr.Column():
-                    checkpoint = gr.Dropdown(label="Checkpoint", choices=["tiny", "small", "base-plus", "large"], value="tiny")
-                    points_map = gr.Image(
-                        label="points map", 
-                        type="filepath",
-                        interactive=True
-                    )
-                    submit_btn = gr.Button("Submit")
+                checkpoint = gr.Dropdown(label="Checkpoint", choices=["tiny", "small", "base-plus", "large"], value="tiny")
+                submit_btn = gr.Button("Submit")
             with gr.Column():
                 output_result = gr.Image()
                 output_result_mask = gr.Image()
