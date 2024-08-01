@@ -145,11 +145,18 @@ with gr.Blocks() as demo:
         with gr.Row():
             input_image = gr.Image(label="input image", interactive=True, type="filepath")
             with gr.Column():
-                point_type = gr.Radio(label="point type", choices=["include", "exclude"], value="include")
+                with gr.Row():
+                    point_type = gr.Radio(label="point type", choices=["include", "exclude"], value="include")
+                    clear_points_btn = gr.Button("Clear Points")
                 points_map = gr.Image(label="points map", interactive=False)
                 submit_btn = gr.Button("Submit")
             output_result = gr.Image()
     
+    clear_points_btn.click(
+        fn = preprocess_image,
+        inputs = input_image, 
+        outputs = [first_frame_path, tracking_points, trackings_input_label, points_map]
+    )
     input_image.upload(preprocess_image, input_image, [first_frame_path, tracking_points, trackings_input_label, points_map])
 
     points_map.select(get_point, [point_type, tracking_points, trackings_input_label, first_frame_path], [tracking_points, trackings_input_label, points_map])
