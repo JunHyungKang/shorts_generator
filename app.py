@@ -10,7 +10,7 @@ from sam2.build_sam import build_sam2
 from sam2.sam2_image_predictor import SAM2ImagePredictor
 
 def preprocess_image(image):
-    return image, gr.State, gr.State
+    return image, gr.State([]), gr.State([])
 
 def get_point(tracking_points, trackings_input_label, first_frame_path, evt: gr.SelectData):
     print(f"You selected {evt.value} at {evt.index} from {evt.target}")
