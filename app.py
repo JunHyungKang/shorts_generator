@@ -176,7 +176,7 @@ with gr.Blocks() as demo:
                     clear_points_btn = gr.Button("Clear Points")
                 
                 with gr.Column():
-                    checkpoint = gr.Dropbox(label="Checkpoint", choices=["tiny", "small", "base-plus", "large"], value="tiny")
+                    checkpoint = gr.Dropdown(label="Checkpoint", choices=["tiny", "small", "base-plus", "large"], value="tiny")
                     points_map = gr.Image(
                         label="points map", 
                         type="filepath",
