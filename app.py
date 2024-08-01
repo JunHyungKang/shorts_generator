@@ -110,7 +110,7 @@ with gr.Blocks() as demo:
     with gr.Column():
         input_image = gr.Image(label="input image", type="filepath")
         submit_btn = gr.Button("Submit")
-        output_result = gr.Textbox()
+        output_result = gr.Gallery()
     submit_btn.click(
         fn = sam_process,
         inputs = [input_image],
