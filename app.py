@@ -167,6 +167,7 @@ with gr.Blocks() as demo:
                 with gr.Column():
                     points_map = gr.Image(
                         label="points map", 
+                        type="filepath",
                         interactive=True
                     )
                     submit_btn = gr.Button("Submit")
