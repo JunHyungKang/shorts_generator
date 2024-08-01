@@ -117,13 +117,23 @@ def show_masks(image, masks, scores, point_coords=None, box_coords=None, input_l
 
     return combined_images, mask_images
 
-def sam_process(input_image, tracking_points, trackings_input_label):
+def sam_process(input_image, checkpoint, tracking_points, trackings_input_label):
     image = Image.open(input_image)
     image = np.array(image.convert("RGB"))
 
-    sam2_checkpoint = "./checkpoints/sam2_hiera_tiny.pt"
-    model_cfg = "sam2_hiera_t.yaml"
-
+    if checkpoint == "tiny":
+        sam2_checkpoint = "./checkpoints/sam2_hiera_tiny.pt"
+        model_cfg = "sam2_hiera_t.yaml"
+    elif checkpoint == "samll":
+        sam2_checkpoint = "./checkpoints/sam2_hiera_tiny.pt"
+        model_cfg = "sam2_hiera_s.yaml"
+    elif checkpoint == "base-plus":
+        sam2_checkpoint = "./checkpoints/sam2_hiera_tiny.pt"
+        model_cfg = "sam2_hiera_b+.yaml"
+    elif checkpoint == "large":
+        sam2_checkpoint = "./checkpoints/sam2_hiera_tiny.pt"
+        model_cfg = "sam2_hiera_l.yaml"
+    
     sam2_model = build_sam2(model_cfg, sam2_checkpoint, device="cuda")
     
     predictor = SAM2ImagePredictor(sam2_model)
@@ -164,7 +174,9 @@ with gr.Blocks() as demo:
                 with gr.Row():
                     point_type = gr.Radio(label="point type", choices=["include", "exclude"], value="include")
                     clear_points_btn = gr.Button("Clear Points")
+                
                 with gr.Column():
+                    checkpoint = gr.Dropbox(label="Checkpoint", choices=["tiny", "small", "base-plus", "large"], value="tiny")
                     points_map = gr.Image(
                         label="points map", 
                         type="filepath",
@@ -199,7 +211,7 @@ with gr.Blocks() as demo:
 
     submit_btn.click(
         fn = sam_process,
-        inputs = [input_image, tracking_points, trackings_input_label],
+        inputs = [input_image, checkpoint, tracking_points, trackings_input_label],
         outputs = [output_result, output_result_mask]
     )
 demo.launch()
