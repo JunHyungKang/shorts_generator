@@ -107,7 +107,7 @@ def sam_process(input_image):
 
 with gr.Blocks() as demo:
     with gr.Column():
-        input_image = gr.Image(label="input image", type="filepath"),
+        input_image = gr.Image(label="input image", type="filepath")
         submit_btn = gr.Button("Submit")
         output_result = gr.Textbox()
     submit_btn.click(
