@@ -134,7 +134,7 @@ def sam_process(input_image, tracking_points, trackings_input_label):
     results = show_masks(image, masks, scores, point_coords=input_point, input_labels=input_label, borders=True)
     print(results)
 
-    return results
+    return results[0]
 
 with gr.Blocks() as demo:
     first_frame_path = gr.State()
