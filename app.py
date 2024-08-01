@@ -12,7 +12,7 @@ from sam2.sam2_image_predictor import SAM2ImagePredictor
 def preprocess_image(image):
     return image, gr.State([]), gr.State([]), image
 
-def get_point(point_type, tracking_points, trackings_input_label, first_frame_path, evt):
+def get_point(point_type, tracking_points, trackings_input_label, first_frame_path, evt: gr.SelectData):
     print(f"You selected {evt.value} at {evt.index} from {evt.target}")
 
     tracking_points.value.append(evt.index)
@@ -177,6 +177,14 @@ with gr.Blocks() as demo:
     trackings_input_label = gr.State([])
     with gr.Column():
         gr.Markdown("# SAM2 Image Predictor")
+        gr.Markdown("This is a simple demo for image segmentation with SAM2.")
+        gr.Markdown("""Instructions: 
+        
+        1. Upload your image 
+        2. With 'include' point type selected, Click on the object to mask
+        3. Switch to 'exclude' point type if you want to specify an area to avoid
+        4. Submit !
+        """)
         with gr.Row():
             with gr.Column():
                 input_image = gr.Image(label="input image", interactive=False, type="filepath", visible=False)                 
