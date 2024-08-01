@@ -2,12 +2,40 @@ import gradio as gr
 import os
 os.environ["TORCH_CUDNN_SDPA_ENABLED"] = "1"
 import torch
-import numpy as np
+import numpy as 
+import cv2
 import matplotlib.pyplot as plt
-from PIL import Image
+from PIL import Image, ImageFilter
 from sam2.build_sam import build_sam2
 from sam2.sam2_image_predictor import SAM2ImagePredictor
 
+def preprocess_image(image):
+    return image, gr.State, gr.State
+
+def get_point(tracking_points, trackings_input_label, first_frame_path, evt: gr.SelectData):
+    print(f"You selected {evt.value} at {evt.index} from {evt.target}")
+
+    tracking_points.value.append(evt.index)
+    print(f"TRACKING POINT: {tracking_points.value}")
+
+    trackings_input_label.value.append(1)
+    print(f"TRACKING INPUT LABEL: {trackings_input_label.value}")
+    # for SAM2
+    # input_point = np.array(tracking_points.value)
+    # print(f"SAM2 INPUT POINT: {input_point}")
+    # input_label = np.array([1])
+
+    transparent_background = Image.open(first_frame_path).convert('RGBA')
+    w, h = transparent_background.size
+    transparent_layer = np.zeros((h, w, 4))
+    for track in tracking_points.value:
+        cv2.circle(transparent_layer, track, 5, (255, 0, 0, 255), -1)
+
+    transparent_layer = Image.fromarray(transparent_layer.astype(np.uint8))
+    selected_point_map = Image.alpha_composite(transparent_background, transparent_layer)
+    
+    return tracking_points, trackings_input_label, selected_point_map
+    
 # use bfloat16 for the entire notebook
 torch.autocast(device_type="cuda", dtype=torch.bfloat16).__enter__()
 
@@ -71,7 +99,7 @@ def show_masks(image, masks, scores, point_coords=None, box_coords=None, input_l
 
         return masks_store
 
-def sam_process(input_image):
+def sam_process(input_image, tracking_points, trackings_input_label):
     image = Image.open(input_image)
     image = np.array(image.convert("RGB"))
 
@@ -84,7 +112,7 @@ def sam_process(input_image):
 
     predictor.set_image(image)
 
-    input_point = np.array([[539, 384]])
+    input_point = np.array(tracking_points.value)
     input_label = np.array([1])
 
     print(predictor._features["image_embed"].shape, predictor._features["image_embed"][-1].shape)
@@ -107,13 +135,26 @@ def sam_process(input_image):
     return results
 
 with gr.Blocks() as demo:
+    first_frame_path = gr.State()
+    tracking_points = gr.State([])
+    trackings_input_label = gr.State([])
     with gr.Column():
-        input_image = gr.Image(label="input image", type="filepath")
-        submit_btn = gr.Button("Submit")
-        output_result = gr.Gallery()
+        gr.Markdown("# SAM2 Image Predictor")
+        with gr.Row():
+            input_image = gr.Image(label="input image", interactive=True, type="filepath")
+            with gr.Column():
+                points_map = gr.Image(label="points map")
+                submit_btn = gr.Button("Submit")
+            output_result = gr.Gallery()
+    
+    input_image.upload(preprocess_image, input_image, [first_frame_path, tracking_points, trackings_input_label])
+
+    input_image.select(get_point, [tracking_points, trackings_input_label, first_frame_path], [tracking_points, trackings_input_label, points_map])
+
+
     submit_btn.click(
         fn = sam_process,
-        inputs = [input_image],
+        inputs = [input_image, tracking_points, trackings_input_label],
         outputs = [output_result]
     )
 demo.launch()
