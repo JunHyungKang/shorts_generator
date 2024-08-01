@@ -125,13 +125,13 @@ def sam_process(input_image, checkpoint, tracking_points, trackings_input_label)
         sam2_checkpoint = "./checkpoints/sam2_hiera_tiny.pt"
         model_cfg = "sam2_hiera_t.yaml"
     elif checkpoint == "samll":
-        sam2_checkpoint = "./checkpoints/sam2_hiera_tiny.pt"
+        sam2_checkpoint = "./checkpoints/sam2_hiera_small.pt"
         model_cfg = "sam2_hiera_s.yaml"
     elif checkpoint == "base-plus":
-        sam2_checkpoint = "./checkpoints/sam2_hiera_tiny.pt"
+        sam2_checkpoint = "./checkpoints/sam2_hiera_base_plus.pt"
         model_cfg = "sam2_hiera_b+.yaml"
     elif checkpoint == "large":
-        sam2_checkpoint = "./checkpoints/sam2_hiera_tiny.pt"
+        sam2_checkpoint = "./checkpoints/sam2_hiera_large.pt"
         model_cfg = "sam2_hiera_l.yaml"
     
     sam2_model = build_sam2(model_cfg, sam2_checkpoint, device="cuda")
