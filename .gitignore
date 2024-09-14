@@ -1,1 +1,4 @@
 paint_undo/venv
+venv
+.env
+__pycache__/
