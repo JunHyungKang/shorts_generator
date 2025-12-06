@@ -47,6 +47,33 @@ def fetch_free_models() -> List[str]:
         "openchat/openchat-7b:free",
     ]
 
+def get_model_candidates(temperature: float = 0.7) -> List[ChatOpenAI]:
+    """
+    Returns a list of ChatOpenAI instances for ALL currently free models.
+    Useful for client-side fallback chains (Middleware).
+    """
+    model_ids = fetch_free_models()
+    candidates = []
+    
+    api_key = os.getenv("OPENROUTER_API_KEY")
+    if not api_key:
+        raise ValueError("OPENROUTER_API_KEY not found.")
+        
+    for model_id in model_ids:
+        llm = ChatOpenAI(
+            openai_api_key=api_key,
+            openai_api_base="https://openrouter.ai/api/v1",
+            model_name=model_id,
+            temperature=temperature,
+            default_headers={
+                "HTTP-Referer": "http://localhost:3000",
+                "X-Title": "Shorts Generator Agent"
+            }
+        )
+        candidates.append(llm)
+        
+    return candidates
+
 def get_chat_model(model_name: str = None, temperature: float = 0.7, use_free_fallback: bool = True):
     api_key = os.getenv("OPENROUTER_API_KEY")
     if not api_key:
@@ -56,35 +83,14 @@ def get_chat_model(model_name: str = None, temperature: float = 0.7, use_free_fa
     if model_name is None:
         model_name = "google/gemini-2.0-flash-exp:free"
 
-    extra_body = {}
+    # Simplified: No complex server-side fallback instructions here.
+    # We rely on the client-side Middleware to handle rotation if this simple instance fails.
     
-    if use_free_fallback:
-        # Fetch dynamic list of free models
-        free_models = fetch_free_models()
-        
-        # Remove current model from fallback list to avoid redundancy logic issues
-        fallbacks = [m for m in free_models if m != model_name]
-        
-        if fallbacks:
-            # OpenRouter allows multiple models in 'models' field (Max 3).
-            # If the primary 'model_name' fails or is busy, it routes to these.
-            extra_body["models"] = fallbacks[:3]
-            
-            # Explicitly tell OpenRouter to load balance/route based on availability/price (free)
-            # "orders" field can also be used, but "models" + "provider.sort" is effective.
-            extra_body["provider"] = {
-                "sort": "price", # Prefer lowest price (free)
-                # "allow_fallbacks": True # Default is true
-            }
-
     llm = ChatOpenAI(
         openai_api_key=api_key,
         openai_api_base="https://openrouter.ai/api/v1",
         model_name=model_name,
         temperature=temperature,
-        model_kwargs={
-            "extra_body": extra_body
-        },
         default_headers={
             "HTTP-Referer": "http://localhost:3000",
             "X-Title": "Shorts Generator Agent"

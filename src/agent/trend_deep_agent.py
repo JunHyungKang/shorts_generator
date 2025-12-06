@@ -1,17 +1,20 @@
 from deepagents import create_deep_agent
-from src.utils.openrouter import get_chat_model
+from langchain_ollama import ChatOllama
 from src.tools.trend_tools import web_search_tool, youtube_search_tool
 from src.tools.storage_tools import save_trends_tool
 
 def get_trend_agent():
-    # 1. Initialize Model
-    # We use 'use_free_fallback=True' to inject ALL currently free models from OpenRouter
-    # as server-side fallbacks. This is far more robust than client-side middleware.
-    llm = get_chat_model(
-        model_name="google/gemini-2.0-flash-exp:free", 
-        temperature=0, 
-        use_free_fallback=True
+    # 1. Initialize Local Model
+    # User specified 'ministral-3:3b'. 
+    # Reduced context window to 4096 for stability.
+    llm = ChatOllama(
+        model="ministral-3:3b", 
+        temperature=0,
+        num_ctx=4096 
     )
+    print(f"   [Deep Agent] Model: Local Ollama (ministral-3:3b) | Context: 4096")
+
+
     
     # 2. System Prompt
     system_prompt = """
@@ -32,7 +35,6 @@ def get_trend_agent():
     """
     
     # 3. Create Agent
-    # No middleware needed; OpenRouter handles routing.
     agent = create_deep_agent(
         model=llm,
         tools=[web_search_tool, youtube_search_tool, save_trends_tool],
