@@ -1,4 +1,5 @@
-paint_undo/venv
-venv
 .env
+.venv/
 __pycache__/
+*.pyc
+.DS_Store
