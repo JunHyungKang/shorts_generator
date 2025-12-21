@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from src.agent.trend_deep_agent import get_trend_agent
+from src.agents.trend_scout.trend_deep_agent import get_trend_agent
 
 app = FastAPI(title="Trend Analyzer Agent API")
 
