@@ -1,7 +1,6 @@
 from deepagents import create_deep_agent
 from langchain_ollama import ChatOllama
-from src.tools.trend_tools import WebSearchTool, YoutubeSearchTool
-from src.tools.storage_tools import SaveTrendsTool
+from src.tools import WebSearchTool, YoutubeSearchTool, SaveTrendsTool
 
 def get_trend_agent():
     # 1. Initialize Local Model
