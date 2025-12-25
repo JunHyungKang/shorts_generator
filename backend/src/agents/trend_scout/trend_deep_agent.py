@@ -1,7 +1,7 @@
 from deepagents import create_deep_agent
 from langchain_ollama import ChatOllama
-from src.tools.trend_tools import web_search_tool, youtube_search_tool
-from src.tools.storage_tools import save_trends_tool
+from src.tools.trend_tools import WebSearchTool, YoutubeSearchTool
+from src.tools.storage_tools import SaveTrendsTool
 
 def get_trend_agent():
     # 1. Initialize Local Model
@@ -26,18 +26,18 @@ def get_trend_agent():
     2. **Hypothesis**: Based on the research, formulate 3-5 specific YouTube search keywords that might be popular.
     3. **Verification**: Use `youtube_search_tool` to search for these keywords and check actual video performance (views).
     4. **Report**: Synthesize your findings into a final report summarizing:
-        - What topic is hot currently?
-        - What kind of video titles/thumbnails are working?
-        - Recommendations for a new video.
+    - What topic is hot currently?
+    - What kind of video titles/thumbnails are working?
+    - Recommendations for a new video.
     5. **Archiving**: Finally, extract the top 3-5 confirmed trending keywords/topics and use `save_trends_tool` to save them to the database.
         
     Write your final response in Korean.
     """
     
-    # 3. Create Agent
+    # 3. Create Agent with Tool Instances
     agent = create_deep_agent(
         model=llm,
-        tools=[web_search_tool, youtube_search_tool, save_trends_tool],
+        tools=[WebSearchTool(), YoutubeSearchTool(), SaveTrendsTool()],
         system_prompt=system_prompt
     )
     

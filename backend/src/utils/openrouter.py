@@ -17,21 +17,15 @@ def fetch_free_models() -> List[str]:
             data = response.json().get("data", [])
             # Filter for models where pricing is explicitly 0
             free_models = [
-                m["id"] for m in data 
+                m for m in data 
                 if m.get("pricing", {}).get("prompt") == "0" 
                 and m.get("pricing", {}).get("completion") == "0"
             ]
-            # Prioritize Google/Meta/Mistral/Microsoft for quality
-            priority = []
-            others = []
-            for m in free_models:
-                if any(k in m for k in ["google", "meta-llama", "mistral", "microsoft"]):
-                    priority.append(m)
-                else:
-                    others.append(m)
             
-            # Return sorted list (Priority first, then others)
-            return priority + others
+            # Sort by 'created' timestamp descending (Newest first)
+            free_models.sort(key=lambda x: x.get("created", 0), reverse=True)
+            
+            return [m["id"] for m in free_models]
     except Exception as e:
         print(f"   [Warning] Failed to fetch free models: {e}")
         pass
@@ -55,22 +49,13 @@ def get_model_candidates(temperature: float = 0.7) -> List[ChatOpenAI]:
     model_ids = fetch_free_models()
     candidates = []
     
-    api_key = os.getenv("OPENROUTER_API_KEY")
-    if not api_key:
-        raise ValueError("OPENROUTER_API_KEY not found.")
-        
     for model_id in model_ids:
-        llm = ChatOpenAI(
-            openai_api_key=api_key,
-            openai_api_base="https://openrouter.ai/api/v1",
-            model_name=model_id,
-            temperature=temperature,
-            default_headers={
-                "HTTP-Referer": "http://localhost:3000",
-                "X-Title": "Shorts Generator Agent"
-            }
-        )
-        candidates.append(llm)
+        try:
+            llm = get_chat_model(model_name=model_id, temperature=temperature)
+            candidates.append(llm)
+        except Exception as e:
+            print(f"   [Warning] Failed to initialize candidate model {model_id}: {e}")
+            continue
         
     return candidates
 

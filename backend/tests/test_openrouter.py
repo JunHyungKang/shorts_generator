@@ -12,6 +12,12 @@ def main():
     try:
         # 1. Initialize Model
         print("Initializing model with Auto-Fallback (Free Models)...")
+        from src.utils.openrouter import get_model_candidates
+        candidates = get_model_candidates()
+        print(f"Candidates found: {len(candidates)}")
+        if not candidates:
+             print("[Warning] No candidates found, check OpenRouter API status.")
+        
         llm = get_chat_model(use_free_fallback=True)
         
         # 2. Send Prompt
