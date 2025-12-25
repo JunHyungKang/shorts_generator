@@ -63,8 +63,6 @@ shorts/
 │   │   │   ├── trend_scout/    # 트렌드 발굴 에이전트
 │   │   │   ├── video_creator/  # 영상 생성 에이전트
 │   │   │   └── orchestrator/   # 워크플로우 관리자
-│   │   ├── services/    # Youtube Upload, LLM Factory 등 공통 서비스
-│   │   ├── models/      # 데이터 모델 (Pydantic)
 │   │   └── api/         # FastAPI 엔드포인트
 │   ├── tests/           # 유닛 및 통합 테스트
 │   └── pyproject.toml
